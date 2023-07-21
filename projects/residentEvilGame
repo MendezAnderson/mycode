@@ -1,0 +1,260 @@
+#!/usr/bin/python3
+import time
+
+#a simple resident evil 0 text game.
+def show_instructions():
+    """Show the game instructions when called"""
+    print('''
+    Resident Evil 0 Train Game
+    =========================
+    Commands:
+      go [direction]
+      get [item]
+      status - Display current location and available directions
+    ''')
+    
+def show_status():
+    """Determine the current status of the player"""
+    print('---------------------------')
+    print('You are in the', current_room)
+    print('Inventory:', inventory)
+    if 'item' in rooms[current_room]:
+        print('You see a', rooms[current_room]['item'])
+    print('Available directions:')
+    if current_room in rooms:
+        directions = rooms[current_room].keys()
+        for direction in directions:
+            print('- ' + direction)
+    print('---------------------------')
+
+
+def solve_puzzle(puzzle_solution):
+    """Prompt the player to solve a puzzle and check the solution"""
+    puzzle = []
+    while len(puzzle) < len(puzzle_solution):
+        number = input('Enter the next number: ')
+        try:
+            number = int(number)
+            puzzle.append(number)
+        except ValueError:
+            print('Invalid input. Enter a number.')
+
+    if puzzle == puzzle_solution:
+        print('Puzzle solved!')
+        return True
+    else:
+        print('Incorrect solution.')
+        return False
+
+
+inventory = []
+current_character = 'Rebecca'
+rooms = {
+    'Passenger Car': {
+        'north': 'Conductor\'s Office',
+        'item': 'train key'
+    },
+    'Conductor\'s Office': {
+        'south': 'Passenger Car',
+        'north': 'Roof',
+        'item': 'map'
+    },
+    'Roof': {
+        'east': 'Control Room',
+        'west': 'Cargo Room'
+    },
+    'Cargo Room': {
+        'east': 'Roof',
+        'item': 'gold ring'
+    },
+    'Control Room': {
+        'west': 'Roof',
+        'item': 'blue keycard'
+    }
+}
+
+current_room = 'Passenger Car'
+puzzle_solution = [4, 5, 9, 9, 9, 9, 9, 9, 9, 9]
+
+show_instructions()
+
+while True:
+    show_status()
+
+    move = ''
+    while move == '':
+        move = input('>')
+
+    move = move.lower().split(' ', 1)
+
+    if move[0] == 'go':
+        if move[1] in rooms[current_room]:
+            current_room = rooms[current_room][move[1]]
+        else:
+            print('You can\'t go that way!')
+
+    if move[0] == 'get':
+        if 'item' in rooms[current_room] and move[1] in rooms[current_room]['item']:
+            inventory.append(move[1])
+            print(move[1], 'got!')
+            del rooms[current_room]['item']
+        else:
+            print('Can\'t get', move[1], '!')
+
+    if current_room == 'Passenger Car' and 'train key' in inventory:
+        print('You have the train key. get ready to face the infected dogs!')
+        print('Description: the door opening and two infected dogs lunging at you.')
+
+        # Encounter with infected dogs
+        print('The infected dogs are blocking your way!')
+        while True:
+            action = input('What will you do? (shoot / dodge) ').lower()
+            if action == 'shoot':
+                print('You shoot at the infected dogs!')
+                if 'gun' in inventory:
+                    print('You have a gun and manage to fend them off. You can continue.')
+                    break
+                else:
+                    print('You don\'t have a weapon to defend yourself. The infected dogs overpower you.')
+                    print('Game Over')
+                    exit()  # End the game if the player doesn't have a gun
+            elif action == 'dodge':
+                print('You try to dodge the infected dogs!')
+                print('You narrowly evade their attacks and manage to escape.')
+                break
+            else:
+                print('Invalid action. Choose "shoot" or "dodge".')
+
+    if current_room == 'Conductor\'s Office' and 'train key' in inventory and 'map' in inventory:
+        print('Billy has blocked your exit. prepare for the leeches attack!')
+        print('Description: the leeches crawling towards you, and Billy comes to your rescue.')
+
+        # Implement code for leeches attack, and Billy saving you
+        print('The leeches start attacking you!')
+        if 'gun' in inventory:
+            print('You use your gun to fight off the leeches.')
+            print('Billy arrives and helps you defeat them.')
+        else:
+            print('You struggle to defend yourself against the leeches.')
+            print('Billy arrives just in time and fights them off, saving you.')
+
+    if current_room == 'Roof' and 'train key' in inventory and 'map' in inventory:
+        print('Head across the train until you reach the hole in the roof.')
+        print('Description: You navigate through the train cars, encountering various obstacles and enemies.')
+
+        print('Rebecca fell into the hole. Look around the room for important items.')
+        print('Description: You search the room and find the service lift and sparking cables.')
+
+        if 'service lift' not in inventory:
+            print('You see a service lift in the corner of the room.')
+            while True:
+                action = input('What will you do? (search / use lift) ').lower()
+                if action == 'search':
+                    print('You search the room more thoroughly.')
+                    print('You find the train key in a hidden compartment!')
+                    inventory.append('train key')
+                    break
+                elif action == 'use lift':
+                    print('You approach the service lift.')
+                    print('You activate the service lift and it starts moving.')
+                    inventory.append('service lift')
+                    break
+                else:
+                    print('Invalid action. Choose "search" or "use lift".')
+
+        if 'service lift' in inventory and 'train key' not in inventory:
+            print('Switch to Billy and find the service lift with the train key.')
+            print('Description: You switch to Billy, locate the service lift, and retrieve the train key.')
+
+            # Switch to Billy
+            current_character = 'Billy'
+            print('You are now controlling Billy.')
+
+            if 'train key' in rooms[current_room]['item']:
+                inventory.append('train key')
+                del rooms[current_room]['item']
+                print('You obtained the train key from the service lift.')
+
+            # Switch back to Rebecca
+            current_character = 'Rebecca'
+            print('You are now controlling Rebecca again.')
+
+    if current_room == 'Cargo Room' and 'train key' in inventory:
+        print('Head back to the passenger car and unlock the door with the train key.')
+        print('Description: You return to the passenger car and use the train key to unlock the door.')
+
+        if 'door' not in rooms['Passenger Car']:
+            print('You see a locked door in the passenger car.')
+            while True:
+                action = input('What will you do? (unlock door / continue) ').lower()
+                if action == 'unlock door':
+                    print('You use the train key to unlock the door.')
+                    rooms['Passenger Car']['door'] = 'Conductor\'s Office'
+                    break
+                elif action == 'continue':
+                    print('You decide to continue without unlocking the door.')
+                    break
+                else:
+                    print('Invalid action. Choose "unlock door" or "continue".')
+
+    if 'door' in rooms['Passenger Car'] and rooms['Passenger Car']['door'] == 'Conductor\'s Office':
+        print('Enter the unlocked door to the Conductor\'s Office.')
+        print('Description: You enter the unlocked door and find yourself in the Conductor\'s Office.')
+
+        if 'briefcase' not in inventory:
+            print('In the Conductor\'s Office, find a briefcase, map, and press the flashing red button.')
+            print('Description: You search the Conductor\'s Office, find the briefcase, map, and activate the red button.')
+
+            if 'map' in rooms['Conductor\'s Office']['item']:
+                inventory.append('map')
+                del rooms['Conductor\'s Office']['item']
+                print('You obtained the map.')
+
+            if 'red button' in rooms['Conductor\'s Office']['item']:
+                inventory.append('red button')
+                del rooms['Conductor\'s Office']['item']
+                print('You activated the red button.')
+
+    if current_room == 'Control Room' and 'blue keycard' in inventory:
+        print('Use the blue keycard to open the front door of the train.')
+        print('Description: You use the blue keycard to open the door at the front of the train.')
+
+        if 'front door' not in rooms['Control Room']:
+            print('You see a locked front door in the control room.')
+            while True:
+                action = input('What will you do? (use keycard / continue) ').lower()
+                if action == 'use keycard':
+                    print('You use the blue keycard to open the front door.')
+                    rooms['Control Room']['front door'] = 'Front of the Train'
+                    break
+                elif action == 'continue':
+                    print('You decide to continue without opening the front door.')
+                    break
+                else:
+                    print('Invalid action. Choose "use keycard" or "continue".')
+
+    if 'front door' in rooms['Control Room'] and rooms['Control Room']['front door'] == 'Front of the Train':
+        print('Enter the front door and walk towards the control room.')
+        print('Description: You enter the front door and make your way towards the control room.')
+
+        if 'manual' not in inventory:
+            print('Walk to the very front of the train and enter the control room.')
+            print('Description: You reach the control room and find a manual to read.')
+
+            if 'manual' in rooms['Control Room']['item']:
+                inventory.append('manual')
+                del rooms['Control Room']['item']
+                print('You obtained the manual.')
+
+    if current_room == 'Control Room' and 'blue keycard' in inventory:
+        print('Enter the control room and solve the puzzle.')
+
+        if solve_puzzle(puzzle_solution):
+            print('You stopped the train! Congratulations!')
+            print('You Win!')
+            exit()  # End the game with a win condition
+        else:
+            print('Time\'s up! The train keeps moving!')
+            print('Game Over')
+            exit()  # End the game with a lose condition
+
